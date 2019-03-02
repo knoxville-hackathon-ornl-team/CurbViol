@@ -84,6 +84,10 @@ def process_violation(violation, out_file):
     """
     postcard_string = Template(postcard_tex)
     out_postcard_string = postcard_string.safe_substitute(address=violation['HOUSE #'] + ' ' + violation['STREET'])
+
+    # We need to escape hashes, else LaTeX will puke.
+    out_postcard_string = out_postcard_string.replace('#','\#')
+
     out_file.write(out_postcard_string)
 
 
