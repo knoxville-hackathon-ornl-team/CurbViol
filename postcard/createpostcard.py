@@ -21,6 +21,8 @@ postcard_tex_preamble = """\\documentclass{article}
     right=0.50in,
     top=0.50in,
     bottom=0.50in]{geometry}
+    
+\\usepackage{graphicx}
 
 \\begin{document}
 """
@@ -29,19 +31,23 @@ postcard_tex = """
 \\begin{flushleft}
 Dear City of Knoxville resident,\\\\[2em]
 
-We had one or more problems collecting your trash. $violations 
+We had one or more problems collecting your trash. $violations \\\\[2em]
+
+$details
+
 \\end{flushleft}
 
 \\vfill
 
 \\begin{flushright}
-Cordially\\\\[2em]
+Cordially,\\\\[2em]
 Knoxville Solid Waste Management
 \\end{flushright}
 
 \\newpage
 
 \\begin{flushleft}
+\\includegraphics[width=2in]{knoxlogo}\\\\
 Knoxville Solid Waste Management\\\\
 400 Main St., Room 470 \\\\
 Knoxville, TN 37902
@@ -93,7 +99,7 @@ def calculate_violations(violation):
         violation_summary += 'Your trash was overflowing making it difficult to pick-up. '
 
     if violation['NOT OUT'] != '':
-        violation_summary += 'Your trash was not out.'
+        violation_summary += 'Your trash was not out. '
 
     if violation['NOT AT CURB'] != '':
         violation_summary += 'Your trash was not close to the curb, which slowed down pick-up.'
@@ -101,6 +107,17 @@ def calculate_violations(violation):
     return violation_summary
 
 
+def handle_details(violation):
+    """
+    :param violation: is an OrderedDict for a violation record
+    :return: if there any details, then return them, else return an empty string.
+    """
+    details = ''
+
+    if violation['DETAILS'] != '':
+        details = "The driver wanted to inform you of the following: " + violation['DETAILS']
+
+    return details
 
 def process_violation(violation, out_file):
     """ This will emit a corresponding postcard for the given violation to the LaTeX postcard file
@@ -113,7 +130,10 @@ def process_violation(violation, out_file):
 
     violation_summary = calculate_violations(violation)
 
+    details = handle_details(violation)
+
     out_postcard_string = postcard_string.safe_substitute(violations=violation_summary,
+                                                          details=details,
                                                           address=violation['HOUSE #'] + ' ' + violation['STREET'])
 
     # We need to escape hashes, else LaTeX will puke.
