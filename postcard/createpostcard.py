@@ -153,6 +153,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--in-file','-i', help='CSV file of curbside violations')
     parser.add_argument('--out-file', '-o', help='Where to write the LaTeX')
+    parser.add_argument('--threshold', '-t', type=int, default=3, help='Threshold for number of violations to merit a postcard')
 
     args = parser.parse_args()
 
@@ -162,18 +163,33 @@ if __name__ == '__main__':
         print(violations_csv_file, 'does not exist ... exiting')
         sys.exit(NO_CSV_FILE_ERROR)
 
-    # We've got curbside violations, so let's start writing the LaTeX that will contain all the postcards
+    # We've got curbside violations, so let's build a dictionary of violations keyed by address
+    aggregated_violations = {}
 
-    with Path(args.out_file).open('w') as latex_postcards_file:
-        write_latex_preamble(latex_postcards_file)
+    with curbside_violation_path.open('r') as curbside_violation:
+        violations_reader = csv.DictReader(curbside_violation)
 
-        with curbside_violation_path.open('r') as curbside_violation:
-            violations_reader = csv.DictReader(curbside_violation)
+        for violation in violations_reader:
+            # Fetch the record for this address and create an empty list if this is the firs time we're referencing it
+            house_address = violation['HOUSE #'] + violation['STREET']
+            single_address = aggregated_violations.setdefault(house_address, [])
 
-            for violation in violations_reader:
-                process_violation(violation, latex_postcards_file)
+            # Accumulation this violation
+            single_address.append(violation)
 
-        write_latex_end(latex_postcards_file)
+    # Now let's cook those down to violators that exceed the given threshold
+    viable_violations = {key:value for key, value in aggregated_violations.items() if len(value) > args.threshold}
+
+    pass
+
+
+
+
+    # with Path(args.out_file).open('w') as latex_postcards_file:
+    #     write_latex_preamble(latex_postcards_file)
+    #
+    #
+    #     write_latex_end(latex_postcards_file)
 
 
 
