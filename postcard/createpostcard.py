@@ -24,6 +24,8 @@ postcard_tex_preamble = """\\documentclass{article}
     
 \\usepackage{graphicx}
 
+\\usepackage{textpos}
+
 \\begin{document}
 """
 
@@ -53,11 +55,11 @@ Knoxville Solid Waste Management\\\\
 Knoxville, TN 37902
 \\end{flushleft}
 \\vfill
-\\begin{center}
-\\parbox{2in}{\\Large Resident\\\\
+\\begin{textblock}{3}(5,0)
+\\parbox{3in}{\\Large Resident\\\\
 $address \\\\
 Knoxville, TN 37902}
-\\end{center}
+\\end{textblock}
 \\vfill
 
 \\newpage
