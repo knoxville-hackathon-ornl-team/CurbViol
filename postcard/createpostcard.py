@@ -128,9 +128,13 @@ def process_violation(violation, out_file):
     """
     postcard_string = Template(postcard_tex)
 
+    # Get nicely formatted strings for the violations and any driver details to later embed in the postcard.
     violation_summary = calculate_violations(violation)
-
     details = handle_details(violation)
+
+    if violation_summary == '' and details == '':
+        print(violation['HOUSE #'], violation['STREET'], 'did not specify violations nor driver details ... skipping')
+        return
 
     out_postcard_string = postcard_string.safe_substitute(violations=violation_summary,
                                                           details=details,
