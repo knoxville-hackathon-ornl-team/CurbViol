@@ -23,17 +23,20 @@ postcard_tex_preamble = """\\documentclass{article}
     bottom=0.50in]{geometry}
     
 \\usepackage{graphicx}
-
-\\usepackage{textpos}
+\\usepackage{enumerate} % for compressed lists
+\\usepackage{textpos} % for precise address block placement
 
 \\begin{document}
 """
 
-postcard_tex = """
+# This is part of the postcard that contains the violations
+violations_tex = """
 \\begin{flushleft}
 Dear City of Knoxville resident,\\\\[2em]
 
-We had one or more problems collecting your trash. $violations \\\\[2em]
+We had the following problems collecting your trash:
+ 
+$violations \\\\[2em]
 
 $details
 
@@ -48,6 +51,10 @@ Knoxville Solid Waste Management
 
 \\newpage
 
+"""
+
+# This is for the address line, of course.
+address_tex = """
 \\begin{flushleft}
 \\includegraphics[width=2in]{knoxlogo}\\\\
 Knoxville Solid Waste Management\\\\
@@ -64,7 +71,6 @@ Knoxville, TN 37902}
 
 \\newpage
 """
-
 
 postcard_tex_end = """
 \\end{document}
@@ -90,62 +96,75 @@ def write_latex_end(out_file):
 
 
 
-def calculate_violations(violation):
+def calculate_violations(violations):
     """
-    :param violation: is an OrderedDict for a violation record
+    :param violations: is an OrderedDict for a violation record
     :return: A string summarizing violations, which could be empty.
     """
-    violation_summary = ''
+    violation_summary = '\\begin{itemize}[noitemsep]\n'
 
-    if violation['OVER FLOW'] != '':
-        violation_summary += 'Your trash was overflowing making it difficult to pick-up. '
+    for violation in violations:
 
-    if violation['NOT OUT'] != '':
-        violation_summary += 'Your trash was not out. '
+        if violation['OVER FLOW'] != '':
+            violation_summary +=  '\\item ' + violation['DATE'] + ' Your trash was overflowing making it difficult to pick-up. \n'
 
-    if violation['NOT AT CURB'] != '':
-        violation_summary += 'Your trash was not close to the curb, which slowed down pick-up.'
+        if violation['NOT OUT'] != '':
+            violation_summary += '\\item ' + violation['DATE'] + ' Your trash was not out.  \n'
+
+        if violation['NOT AT CURB'] != '':
+            violation_summary += '\\item ' + violation['DATE'] + ' Your trash was not close to the curb, which slowed down pick-up. \n'
+
+    violation_summary += '\\end{itemize} \n'
 
     return violation_summary
 
 
-def handle_details(violation):
+def handle_details(violations):
     """
-    :param violation: is an OrderedDict for a violation record
+    :param violations: is an OrderedDict for a violation record
     :return: if there any details, then return them, else return an empty string.
     """
-    details = ''
+    details = '\\begin{itemize}[noitemsep]\n'
 
-    if violation['DETAILS'] != '':
-        details = "The driver wanted to inform you of the following: " + violation['DETAILS']
+    # TODO Re-format this more intelligently to eliminate redundant "the driver wanted ..."
+    for violation in violations:
+        if violation['DETAILS'] != '':
+            details = '\\item ' + violation['DATE'] + ' The driver wanted to inform you of the following: ' + violation['DETAILS'] + ' \n'
+
+    details += '\\end{itemize} \n'
 
     return details
 
-def process_violation(violation, out_file):
+def process_violation(violations, out_file):
     """ This will emit a corresponding postcard for the given violation to the LaTeX postcard file
 
-    :param violation: is an OrderedDict containing details for a specific violation
+    :param violations: is an OrderedDict containing details for a specific violation
     :param out_file: is an open connection to the LaTeX file
     :return: None
     """
-    postcard_string = Template(postcard_tex)
+    # First write out the violations side of the postcard
+
+    violations_string = Template(violations_tex)
 
     # Get nicely formatted strings for the violations and any driver details to later embed in the postcard.
-    violation_summary = calculate_violations(violation)
-    details = handle_details(violation)
+    violation_summary = calculate_violations(violations)
+    details = handle_details(violations)
 
-    if violation_summary == '' and details == '':
-        print(violation['HOUSE #'], violation['STREET'], 'did not specify violations nor driver details ... skipping')
-        return
-
-    out_postcard_string = postcard_string.safe_substitute(violations=violation_summary,
-                                                          details=details,
-                                                          address=violation['HOUSE #'] + ' ' + violation['STREET'])
+    out_postcard_string = violations_string.safe_substitute(violations=violation_summary,
+                                                            details=details)
+    out_file.write(out_postcard_string)
 
     # We need to escape hashes, else LaTeX will puke.
-    out_postcard_string = out_postcard_string.replace('#','\#')
+    address_string = Template(address_tex)
 
-    out_file.write(out_postcard_string)
+    # We arbitrarily get the street address from the first violation since all violations *should* have the same address
+    out_address_string = address_string.safe_substitute(address=violations[0]['HOUSE #'] + ' ' + violations[0]['STREET'])
+
+    out_address_string = out_address_string.replace('#','\#')
+
+    # Then write the address side of the postcard
+
+    out_file.write(out_address_string)
 
 
 if __name__ == '__main__':
@@ -180,16 +199,13 @@ if __name__ == '__main__':
     # Now let's cook those down to violators that exceed the given threshold
     viable_violations = {key:value for key, value in aggregated_violations.items() if len(value) > args.threshold}
 
-    pass
+    with Path(args.out_file).open('w') as latex_postcards_file:
+        write_latex_preamble(latex_postcards_file)
 
+        for viable_violation in viable_violations.values():
+            process_violation(viable_violation, latex_postcards_file)
 
-
-
-    # with Path(args.out_file).open('w') as latex_postcards_file:
-    #     write_latex_preamble(latex_postcards_file)
-    #
-    #
-    #     write_latex_end(latex_postcards_file)
+        write_latex_end(latex_postcards_file)
 
 
 
