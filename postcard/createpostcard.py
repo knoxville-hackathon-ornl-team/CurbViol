@@ -26,26 +26,32 @@ postcard_tex_preamble = """\\documentclass{article}
 """
 
 postcard_tex = """
-Hello, World!
+\\begin{flushleft}
+Dear City of Knoxville resident,\\\\[2em]
 
-This is just a little note to see how you're doing. I haven't see out since that big party in stdlib's house. I hope you've gotten out of that infinite loop I wrote after my 5th beer.
+We had one or more problems collecting your trash. $violations 
+\\end{flushleft}
 
 \\vfill
-\\raggedleft
-Your friend, \\\\
-Printf
+
+\\begin{flushright}
+Cordially\\\\[2em]
+Knoxville Solid Waste Management
+\\end{flushright}
 
 \\newpage
 
-\\raggedright
+\\begin{flushleft}
 Knoxville Solid Waste Management\\\\
 400 Main St., Room 470 \\\\
 Knoxville, TN 37902
+\\end{flushleft}
 \\vfill
-\\centering
+\\begin{center}
 \\parbox{2in}{\\Large Resident\\\\
 $address \\\\
 Knoxville, TN 37902}
+\\end{center}
 \\vfill
 
 \\newpage
@@ -75,6 +81,27 @@ def write_latex_end(out_file):
     out_file.write(postcard_tex_end)
 
 
+
+def calculate_violations(violation):
+    """
+    :param violation: is an OrderedDict for a violation record
+    :return: A string summarizing violations, which could be empty.
+    """
+    violation_summary = ''
+
+    if violation['OVER FLOW'] != '':
+        violation_summary += 'Your trash was overflowing making it difficult to pick-up. '
+
+    if violation['NOT OUT'] != '':
+        violation_summary += 'Your trash was not out.'
+
+    if violation['NOT AT CURB'] != '':
+        violation_summary += 'Your trash was not close to the curb, which slowed down pick-up.'
+
+    return violation_summary
+
+
+
 def process_violation(violation, out_file):
     """ This will emit a corresponding postcard for the given violation to the LaTeX postcard file
 
@@ -83,7 +110,11 @@ def process_violation(violation, out_file):
     :return: None
     """
     postcard_string = Template(postcard_tex)
-    out_postcard_string = postcard_string.safe_substitute(address=violation['HOUSE #'] + ' ' + violation['STREET'])
+
+    violation_summary = calculate_violations(violation)
+
+    out_postcard_string = postcard_string.safe_substitute(violations=violation_summary,
+                                                          address=violation['HOUSE #'] + ' ' + violation['STREET'])
 
     # We need to escape hashes, else LaTeX will puke.
     out_postcard_string = out_postcard_string.replace('#','\#')
