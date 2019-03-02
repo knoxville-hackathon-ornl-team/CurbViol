@@ -6,7 +6,7 @@ import sys
 import argparse
 import csv
 from pathlib import Path
-from pprint import pprint
+from string import Template
 
 # This is the script return code if we cannot open the curbside violations CSV file
 NO_CSV_FILE_ERROR = 1
@@ -38,15 +38,17 @@ Printf
 \\newpage
 
 \\raggedright
-return 0; \\\\
-123 Main St \\\\
-Big City, ES 12345
+Knoxville Solid Waste Management\\\\
+400 Main St., Room 470 \\\\
+Knoxville, TN 37902
 \\vfill
 \\centering
-\\parbox{2in}{Mr World \\\\
-123 Knuth Dr \\\\
-Central Processor, UT 0x000}
+\\parbox{2in}{\\Large Resident\\\\
+$address \\\\
+Knoxville, TN 37902}
 \\vfill
+
+\\newpage
 """
 
 
@@ -63,12 +65,6 @@ def write_latex_preamble(out_file):
     """
     out_file.write(postcard_tex_preamble)
 
-def write_violation(out_file):
-    """ This emits a postcard for the given violation
-
-    :param out_file:
-    :return:
-    """
 
 def write_latex_end(out_file):
     """ Write out the end of the LaTeX document for the postcards
@@ -86,6 +82,9 @@ def process_violation(violation, out_file):
     :param out_file: is an open connection to the LaTeX file
     :return: None
     """
+    postcard_string = Template(postcard_tex)
+    out_postcard_string = postcard_string.safe_substitute(address=violation['HOUSE #'] + ' ' + violation['STREET'])
+    out_file.write(out_postcard_string)
 
 
 if __name__ == '__main__':
@@ -96,7 +95,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    curbside_violation_path = Path(violations_csv_file)
+    curbside_violation_path = Path(args.in_file)
 
     if not curbside_violation_path.exists():
         print(violations_csv_file, 'does not exist ... exiting')
@@ -106,14 +105,14 @@ if __name__ == '__main__':
 
     with Path(args.out_file).open('w') as latex_postcards_file:
         write_latex_preamble(latex_postcards_file)
-        write_latex_end(latex_postcards_file)
 
         with curbside_violation_path.open('r') as curbside_violation:
             violations_reader = csv.DictReader(curbside_violation)
 
             for violation in violations_reader:
-                pprint(violation)
+                process_violation(violation, latex_postcards_file)
 
+        write_latex_end(latex_postcards_file)
 
 
 
