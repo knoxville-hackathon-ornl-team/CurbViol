@@ -15,6 +15,7 @@ csvkit in python
 ```
 python3 -m venv knxhxenv
 . ./knxhxenv/bin/activate
+pip install csvkit psycopg2
 ```
 
 ### load the data
