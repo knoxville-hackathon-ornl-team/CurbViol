@@ -14,6 +14,7 @@ cur2 = conn.cursor()
 app = Flask(__name__, static_url_path='')
 
 @app.route('/index.html')
+@app.route('/')
 def root():
     return send_from_directory('', 'index.html')
 
