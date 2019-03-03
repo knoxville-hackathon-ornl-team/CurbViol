@@ -23,14 +23,15 @@ def root():
 def root_css():
     return send_from_directory('', 'style.css')
 
-addre = r"^\s*(\d+)\s+(\w+)"
+addre = r"^\s*(\d+)\s+(.+)"
 
 @app.route('/submit', methods=['POST'])
 def submit():
+    print(request.form)
     m = re.search(addre, request.args.get('address', 'unknown'))
     if m:
-        print(m.group(1), m.group(2))
-        cur1.execute('INSERT INTO violations("DATE", "HOUSE #", "STREET", "DETAILS") VALUES (CURRENT_DATE, %s, %s)', m.group(1), m.group(2), ", ".join(request.args.get("violations"), request.args.get('details')))
+        print('m', m.group(1), m.group(2))
+        cur1.execute('INSERT INTO violations("DATE", "HOUSE #", "STREET", "DETAILS") VALUES (CURRENT_DATE, %s, %s)', (m.group(1), m.group(2), ", ".join([request.args.get("violation", "None"), request.args.get('details', "None")])))
         return "Updated"
     else:
         return "Malformed address"
