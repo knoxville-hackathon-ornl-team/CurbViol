@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
 """
-    Used to create LaTeX output for a postcard.  This creates two pages for a 3.5" x 5" postcard for each violation.
+    This provides support for generating the LaTeX for waste management postcards.
 
+    Used by csv2postcard.py and db2postcard.py
 
-usage: createpostcard.py [-h] [--in-file IN_FILE] [--out-file OUT_FILE]
-                         [--threshold THRESHOLD]
+    E.g.,
 
-Generate a postcard LaTeX file
+        with Path(args.out_file).open('w') as latex_postcards_file:
+            cardlatex.write_latex_preamble(latex_postcards_file)
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --in-file IN_FILE, -i IN_FILE
-                        CSV file of curbside violations
-  --out-file OUT_FILE, -o OUT_FILE
-                        Where to write the LaTeX
-  --threshold THRESHOLD, -t THRESHOLD
-                        Threshold for number of violations to merit a postcard
+            for viable_violation in viable_violations.values():
+                cardlatex.process_violation(viable_violation, latex_postcards_file)
+
+            cardlatex.write_latex_end(latex_postcards_file)
+
+        Where viable_violations is a dictionary of a list of dictionaries.  The outer
+        dictionary is keyed by concatenation of "HOUSE #" and "STREET ADDRESS".  The
+        lists contains dictionaries that correspond to individual violations, and have
+        key names of DATE, OVER FLOW, NOT OUT, NOT AT CURB, and DETAILS.  These values
+        ultimately come from either a CSV file or the database.
 """
-import sys
-import argparse
-import csv
-from pathlib import Path
 from string import Template
 
 # TODO Need to use better pythonic string formatting throughout.
@@ -44,13 +43,14 @@ postcard_tex_preamble = """\\documentclass[10pt]{article}
     right=0.50in,
     top=0.450in,
     bottom=0.450in]{geometry}
-    
+
 \\usepackage{graphicx}
 \\usepackage{enumitem} % for compressed lists
 \\usepackage{textpos} % for precise address block placement
 \\usepackage{needspace} % try to prevent unnecessary page breaks
+\\usepackage{pbox} % for making boxes for the parting lines
 
-% Frantic effort to prevent the "Cordially" lines from occasionlly going to another page for no reason.
+% Frantic effort to prevent the "Cordially" lines from occasionally going to another page for no reason.
 \\needspace{10\\baselineskip}
 \\clubpenalty=10
 \\widowpenalties 1 10000
@@ -69,10 +69,15 @@ $violations
 $details
 \\end{flushleft}
 \\vfill
-\\begin{flushleft}
+\\pbox{3in}{
 Cordially,\\\\[.9em]
-Knoxville Solid Waste Management
-\\end{flushleft}
+Knoxville Solid Waste Management\\\\
+{\\tiny http://knoxvilletn.gov/government/city\_departments\_offices/public\_service/solid\_waste}
+}
+\\hfill
+\\pbox{1in}{
+\\includegraphics[width=.75in]{knxwasteqrcode}
+}
 \\newpage
 """
 
@@ -118,12 +123,12 @@ def write_latex_end(out_file):
     out_file.write(postcard_tex_end)
 
 
-
 def calculate_violations(violations):
     """
     :param violations: is an OrderedDict for a violation record
     :return: A string summarizing violations
     """
+
     def is_valid(x):
         """ return false if all three violation fields are blank """
         return x['OVER FLOW'] != '' or x['NOT OUT'] != '' or x['NOT AT CURB'] != ''
@@ -132,13 +137,15 @@ def calculate_violations(violations):
 
     # Let's filter out the bogus violations where all the violations are blank.
     # TODO we may actually want to whine about such bogus violation records.  :P
-    valid_violations= [x for x in violations if is_valid(x)]
+    valid_violations = [x for x in violations if is_valid(x)]
 
     if len(valid_violations) > MAX_VIOLATIONS_PRINTED:
         # These won't all fit on the back of the postcard, so just print the last five, and summarize the total count.
         reported_violations = valid_violations[-MAX_VIOLATIONS_PRINTED:]
-        violation_summary += 'We had ' + str(len(valid_violations)) + " problems collecting your trash in the period between " + valid_violations[0]['DATE'] + \
-                            ' and ' + valid_violations[-1]['DATE'] + ', and show only the most recent four here.\n\n'
+        violation_summary += 'We had ' + str(
+            len(valid_violations)) + " problems collecting your trash in the period between " + valid_violations[0][
+                                 'DATE'] + \
+                             ' and ' + valid_violations[-1]['DATE'] + ', and show only the most recent four here.\n\n'
     else:
         reported_violations = valid_violations
         violation_summary += 'We had the following problems collecting your trash:\n'
@@ -148,13 +155,15 @@ def calculate_violations(violations):
     for violation in reported_violations:
 
         if violation['OVER FLOW'] != '':
-            violation_summary += '\\item ' + violation['DATE'] + ' Your trash was overflowing making it difficult to pick-up. \n'
+            violation_summary += '\\item ' + violation[
+                'DATE'] + ' Your trash was overflowing making it difficult to pick-up. \n'
 
         if violation['NOT OUT'] != '':
             violation_summary += '\\item ' + violation['DATE'] + ' Your trash was not out.  \n'
 
         if violation['NOT AT CURB'] != '':
-            violation_summary += '\\item ' + violation['DATE'] + ' Your trash was not close to the curb, which slowed down pick-up. \n'
+            violation_summary += '\\item ' + violation[
+                'DATE'] + ' Your trash was not close to the curb, which slowed down pick-up. \n'
 
     violation_summary += '\\end{itemize} \n'
 
@@ -175,8 +184,9 @@ def handle_details(violations):
         return details
 
     if len(valid_details) > MAX_DETAILS_PRINTED:
-        details += 'There were more than ' + str(MAX_DETAILS_PRINTED) + ' comments for your trash pickup reported in the period ' + \
-            violations[0]['DATE'] + ' and ' + violations[-1]['DATE'] + ', but only report the last two.'
+        details += 'There were more than ' + str(
+            MAX_DETAILS_PRINTED) + ' comments for your trash pickup reported in the period ' + \
+                   violations[0]['DATE'] + ' and ' + violations[-1]['DATE'] + ', but only report the last two.'
         valid_details = valid_details[-MAX_DETAILS_PRINTED:]
     else:
         details += 'We have the following notes regarding removing your trash:\n'
@@ -190,6 +200,7 @@ def handle_details(violations):
     details += '\\end{itemize}\n'
 
     return details
+
 
 def process_violation(violations, out_file):
     """ This will emit a corresponding postcard for the given violation to the LaTeX postcard file
@@ -214,53 +225,11 @@ def process_violation(violations, out_file):
 
     # We arbitrarily get the street address from the first violation, violations[0], since all violations
     # *should* have the same address
-    out_address_string = address_string.safe_substitute(address=violations[0]['HOUSE #'] + ' ' + violations[0]['STREET'])
+    out_address_string = address_string.safe_substitute(
+        address=violations[0]['HOUSE #'] + ' ' + violations[0]['STREET'])
 
     # We need to escape hashes, else LaTeX will puke.
-    out_address_string = out_address_string.replace('#','\#')
-
+    out_address_string = out_address_string.replace('#', '\#')
 
     out_file.write(out_address_string)
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Generate a postcard LaTeX file')
-
-    parser.add_argument('--in-file','-i', help='CSV file of curbside violations')
-    parser.add_argument('--out-file', '-o', help='Where to write the LaTeX')
-    parser.add_argument('--threshold', '-t', type=int, default=3, help='Threshold for number of violations to merit a postcard')
-
-    args = parser.parse_args()
-
-    curbside_violation_path = Path(args.in_file)
-
-    if not curbside_violation_path.exists():
-        print(violations_csv_file, 'does not exist ... exiting')
-        sys.exit(NO_CSV_FILE_ERROR)
-
-    # We've got curbside violations, so let's build a dictionary of violations keyed by address
-    aggregated_violations = {}
-
-    with curbside_violation_path.open('r') as curbside_violation:
-        violations_reader = csv.DictReader(curbside_violation)
-
-        for violation in violations_reader:
-            # Fetch the record for this address and create an empty list if this is the firs time we're referencing it
-            house_address = violation['HOUSE #'] + violation['STREET']
-            single_address = aggregated_violations.setdefault(house_address, [])
-
-            # Accumulation this violation
-            single_address.append(violation)
-
-    # Now let's cook those down to violators that exceed the given threshold
-    viable_violations = {key:value for key, value in aggregated_violations.items() if len(value) > args.threshold}
-
-    print('Considering ', len(viable_violations), 'violations out of', len(aggregated_violations), 'violations using a threshold of', args.threshold)
-
-    with Path(args.out_file).open('w') as latex_postcards_file:
-        write_latex_preamble(latex_postcards_file)
-
-        for viable_violation in viable_violations.values():
-            process_violation(viable_violation, latex_postcards_file)
-
-        write_latex_end(latex_postcards_file)
