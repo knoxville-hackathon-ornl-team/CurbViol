@@ -17,7 +17,7 @@ MAX_DETAILS_PRINTED = 2
 # This is the script return code if we cannot open the curbside violations CSV file
 NO_CSV_FILE_ERROR = 1
 
-postcard_tex_preamble = """\\documentclass{article}
+postcard_tex_preamble = """\\documentclass[10pt]{article}
 
 \\pagestyle{empty}
 \\setlength\\parindent{0pt}
@@ -25,15 +25,19 @@ postcard_tex_preamble = """\\documentclass{article}
     paperheight=3.5in,
     left=0.50in,
     right=0.50in,
-    top=0.50in,
-    bottom=0.50in]{geometry}
+    top=0.450in,
+    bottom=0.450in]{geometry}
     
 \\usepackage{graphicx}
 \\usepackage{enumitem} % for compressed lists
 \\usepackage{textpos} % for precise address block placement
 \\usepackage{needspace} % try to prevent unnecessary page breaks
 
-\\needspace{5\\baselineskip}
+% Frantic effort to prevent the "Cordially" lines from occasionlly going to another page for no reason.
+\\needspace{10\\baselineskip}
+\\clubpenalty=10
+\\widowpenalties 1 10000
+\\raggedbottom
 
 \\renewcommand{\\familydefault}{\\sfdefault} % default font sans serif
 
@@ -121,7 +125,7 @@ def calculate_violations(violations):
         reported_violations = valid_violations
         violation_summary += 'We had the following problems collecting your trash:\n'
 
-    violation_summary += '\\begin{itemize}[noitemsep]\n\\footnotesize\n'
+    violation_summary += '\\begin{itemize}[noitemsep]\n\\scriptsize\n'
 
     for violation in reported_violations:
 
@@ -159,7 +163,7 @@ def handle_details(violations):
     else:
         details += 'We have the following notes regarding removing your trash:\n'
 
-    details += '\\begin{itemize}[noitemsep]\n\\footnotesize'
+    details += '\\begin{itemize}[noitemsep]\n\\scriptsize'
 
     for violation in valid_details:
         if violation['DETAILS'] != '':
