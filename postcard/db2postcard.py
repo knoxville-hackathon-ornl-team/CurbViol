@@ -6,8 +6,24 @@
 
 
 """
+import psycopg2
+from pprint import pprint
+
+
 import cardlatex
 
 
 if __name__ == '__main__':
-    pass
+    conn = psycopg2.connect("postgresql://docker:docker@localhost:25432/gis")
+    conn.set_session(autocommit=True)
+
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT * FROM violators')
+
+    results = cursor.fetchall()
+
+    for result in results:
+        pprint(result)
+
+

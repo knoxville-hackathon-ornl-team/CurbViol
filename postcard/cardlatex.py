@@ -48,6 +48,7 @@ postcard_tex_preamble = """\\documentclass[10pt]{article}
 \\usepackage{enumitem} % for compressed lists
 \\usepackage{textpos} % for precise address block placement
 \\usepackage{needspace} % try to prevent unnecessary page breaks
+\\usepackage{pbox} % for making boxes for the parting lines
 
 % Frantic effort to prevent the "Cordially" lines from occasionally going to another page for no reason.
 \\needspace{10\\baselineskip}
@@ -68,10 +69,15 @@ $violations
 $details
 \\end{flushleft}
 \\vfill
-\\begin{flushleft}
+\\pbox{3in}{
 Cordially,\\\\[.9em]
-Knoxville Solid Waste Management
-\\end{flushleft}
+Knoxville Solid Waste Management\\\\
+{\\tiny http://knoxvilletn.gov/government/city\_departments\_offices/public\_service/solid\_waste}
+}
+\\hfill
+\\pbox{1in}{
+\\includegraphics[width=.75in]{knxwasteqrcode}
+}
 \\newpage
 """
 
