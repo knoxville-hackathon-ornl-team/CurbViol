@@ -15,6 +15,16 @@ from pprint import pprint
 import cardlatex
 
 
+def none2empty(s):
+    """
+    :param s: a database field value that could be none
+    :return: Any none values are converted to empty strings
+    """
+    if s is None:
+        return ''
+    return s
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a postcard LaTeX file')
 
@@ -47,10 +57,13 @@ if __name__ == '__main__':
         violation = {'DATE' : str(result[0]),
                      'HOUSE #' : result[1],
                      'STREET' : result[2],
-                     'OVER FLOW' : result[3],
-                     'NOT OUT' : result[4],
-                     'NOT AT CURB' : result[5],
-                     'DETAILS' : result[6]}
+                     'OVER FLOW' : none2empty(result[3]),
+                     'NOT OUT' : none2empty(result[4]),
+                     'NOT AT CURB' : none2empty(result[5]),
+                     'DETAILS' : none2empty(result[6])}
+
+        # Accumulation this violation
+        single_address.append(violation)
 
     # Now let's cook those down to violators that exceed the given threshold
     viable_violations = {key:value for key, value in aggregated_violations.items() if len(value) > args.threshold}
