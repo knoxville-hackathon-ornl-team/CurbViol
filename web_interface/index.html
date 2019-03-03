@@ -5,7 +5,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
    integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
    crossorigin=""/>
-   <link rel="stylesheet" href="style.css"/>
    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
    integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
@@ -16,35 +15,14 @@
 <body>
         <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
                 <a class="navbar-brand" href="#">Curb Your Violations</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-                  <span class="navbar-toggler-icon"></span>
-                </button>
-              
-                <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-                  <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                      <a class="nav-link" href="#">Link</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                      <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dropdown</a>
-                      <div class="dropdown-menu" aria-labelledby="dropdown01">
-                        <a class="dropdown-item" href="#">Action</a>
-                        <a class="dropdown-item" href="#">Another action</a>
-                        <a class="dropdown-item" href="#">Something else here</a>
-                      </div>
-                    </li>
-                  </ul>
-                  <form class="form-inline my-2 my-lg-0">
-                    <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-                    <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
-                  </form>
-                </div>
+                <form class="form-inline my-2 my-lg-0">
+                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Generate Postcards</button>
+                </form>
+                
+                   
         </nav>
-        <div id="mapid"></div>
-        <div class="container" id="cards">
+        <div id="mapid" style="height: 500px; margin: 25px; margin-top: 75px"></div>
+        <div class="container" id="cards" style="margin-top:30px;">
                 <div class="card-deck mb-3 text-center">
                   <div class="card mb-4 shadow-sm">
                     <div class="card-header">
@@ -52,7 +30,7 @@
                       <form action="{{ http://127.0.0.1:5000/submit }}" method="POST">
                             <div class="form-group">
                                     <label for="address">Address</label>
-                                    <input type="email" class="form-control" id="address" placeholder="Enter address">
+                                    <input type="text" class="form-control" id="address" placeholder="Enter address">
     
                                   </div>
                                   <div class="form-group">
@@ -67,7 +45,7 @@
                                       </div>
                                       <div class="form-group">
                                             <label for="details">Details</label>
-                                            <input type="email" class="form-control" id="details" placeholder="Enter Details">
+                                            <input type="text" class="form-control" id="details" placeholder="Enter Details">
             
                                           </div>
                                   <button type="submit" class="btn btn-primary">Submit</button>
@@ -77,6 +55,36 @@
                   <div class="card mb-4 shadow-sm">
                     <div class="card-header">
                       <h4 class="my-0 font-weight-normal">Violation by Type</h4>
+                      <table class="table">
+                            <thead>
+                              <tr>
+                                <th scope="col">Type</th>
+                                <th scope="col">Count</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td>Overflow</td>
+                                <td>10063</td>
+                              </tr>
+                              <tr>
+                                <td>Not Out</td>
+                                <td>34137</td>
+                              </tr>
+                              <tr>
+                                <td>Not at Curb</td>
+                                <td>737</td>
+                              </tr>
+                              <tr>
+                                    <td>Other</td>
+                                    <td>2189</td>
+                                  </tr>
+                                  <tr>
+                                        <td>Total</td>
+                                        <td>77126</td>
+                                      </tr>
+                            </tbody>
+                          </table>
                     </div>
                     <div class="card-body">
                     </div>
@@ -84,6 +92,32 @@
                   <div class="card mb-4 shadow-sm">
                     <div class="card-header">
                       <h4 class="my-0 font-weight-normal">Worst Offenders</h4>
+                      <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                              7914 Gleason Dr
+                              <span class="badge badge-primary badge-pill">72</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                              3104 N Broadway
+                              <span class="badge badge-primary badge-pill">30</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                              2915 Island Home Ave
+                              <span class="badge badge-primary badge-pill">24</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    500 Riverfront Way
+                                    <span class="badge badge-primary badge-pill">16</span>
+                                  </li>
+                                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    1225 Willow Ave
+                                    <span class="badge badge-primary badge-pill">15</span>
+                                  </li>
+                                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    3131 Morris Ave
+                                    <span class="badge badge-primary badge-pill">10</span>
+                                  </li>
+                          </ul>
                     </div>
                     <div class="card-body">
                     
