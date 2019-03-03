@@ -9,7 +9,10 @@ from pathlib import Path
 from string import Template
 
 # This is maximum number of violations we can handle printing on a postcard before we run out of space
-MAX_VIOLATIONS_PRINTED = 5
+MAX_VIOLATIONS_PRINTED = 4
+
+# This is the maximum number of details we'll allow on a postcard
+MAX_DETAILS_PRINTED = 2
 
 # This is the script return code if we cannot open the curbside violations CSV file
 NO_CSV_FILE_ERROR = 1
@@ -28,6 +31,9 @@ postcard_tex_preamble = """\\documentclass{article}
 \\usepackage{graphicx}
 \\usepackage{enumitem} % for compressed lists
 \\usepackage{textpos} % for precise address block placement
+\\usepackage{needspace} % try to prevent unnecessary page breaks
+
+\\needspace{5\\baselineskip}
 
 \\renewcommand{\\familydefault}{\\sfdefault} % default font sans serif
 
@@ -37,23 +43,16 @@ postcard_tex_preamble = """\\documentclass{article}
 # This is part of the postcard that contains the violations
 violations_tex = """
 \\begin{flushleft}
-Dear City of Knoxville resident,\\\\[2em]
- 
+Dear City of Knoxville resident,\\\\[1em]
 $violations
-
 $details
-
 \\end{flushleft}
-
 \\vfill
-
-\\begin{flushright}
-Cordially,\\\\[2em]
+\\begin{flushleft}
+Cordially,\\\\[.9em]
 Knoxville Solid Waste Management
-\\end{flushright}
-
+\\end{flushleft}
 \\newpage
-
 """
 
 # This is for the address line, of course.
@@ -102,15 +101,15 @@ def write_latex_end(out_file):
 def calculate_violations(violations):
     """
     :param violations: is an OrderedDict for a violation record
-    :return: A string summarizing violations, which could be empty.
+    :return: A string summarizing violations
     """
     violation_summary = ''
 
     if len(violations) > MAX_VIOLATIONS_PRINTED:
         # These won't all fit on the back of the postcard, so just print the last five, and summarize the total count.
-        reported_violations = violations[-(MAX_VIOLATIONS_PRINTED + 1):]
-        violation_summary += 'You had ' + str(len(violations)) + " problems collecting your trash in the period between " + violations[0]['DATE'] + \
-                            ' and ' + violations[-1]['DATE'] + ', and we show only the most recent five here.\n\n'
+        reported_violations = violations[-MAX_VIOLATIONS_PRINTED:]
+        violation_summary += 'We had ' + str(len(violations)) + " problems collecting your trash in the period between " + violations[0]['DATE'] + \
+                            ' and ' + violations[-1]['DATE'] + ', and show only the most recent four here.\n\n'
     else:
         reported_violations = violations
         violation_summary += 'We had the following problems collecting your trash:\n'
@@ -138,21 +137,28 @@ def handle_details(violations):
     :param violations: is an OrderedDict for a violation record
     :return: if there any details, then return them, else return an empty string.
     """
-    if [x for x in violations if x['DETAILS'] != ''] == []:
-        # no details, so bail
-        return ''
+    details = ''
 
-    # TODO we need similar throttling for potentially huge number of details overwhelming the postcard
+    valid_details = [x for x in violations if x['DETAILS'] != '']
 
-    details = 'We have the following notes regarding removing your trash:\n'
-    details += '\\begin{itemize}[noitemsep]\n'
+    if valid_details == []:
+        # no details, so bail with an empty string indicating no details in any reports for this address
+        return details
 
-    # TODO Re-format this more intelligently to eliminate redundant "the driver wanted ..."
-    for violation in violations:
+    if len(valid_details) > MAX_DETAILS_PRINTED:
+        details += 'There were more than ' + str(MAX_DETAILS_PRINTED) + ' comments for your trash pickup reported in the period ' + \
+            violations[0]['DATE'] + ' and ' + violations[-1]['DATE'] + ', but only report the last two.'
+        valid_details = valid_details[-MAX_DETAILS_PRINTED:]
+    else:
+        details += 'We have the following notes regarding removing your trash:\n'
+
+    details += '\\begin{itemize}[noitemsep]\n\\footnotesize'
+
+    for violation in valid_details:
         if violation['DETAILS'] != '':
             details += '\\item ' + violation['DATE'] + ' ' + violation['DETAILS'] + ' \n'
 
-    details += '\\end{itemize} \n'
+    details += '\\end{itemize}\n'
 
     return details
 
