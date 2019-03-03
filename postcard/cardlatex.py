@@ -3,6 +3,22 @@
     This provides support for generating the LaTeX for waste management postcards.
 
     Used by csv2postcard.py and db2postcard.py
+
+    E.g.,
+
+        with Path(args.out_file).open('w') as latex_postcards_file:
+            cardlatex.write_latex_preamble(latex_postcards_file)
+
+            for viable_violation in viable_violations.values():
+                cardlatex.process_violation(viable_violation, latex_postcards_file)
+
+            cardlatex.write_latex_end(latex_postcards_file)
+
+        Where viable_violations is a dictionary of a list of dictionaries.  The outer
+        dictionary is keyed by concatenation of "HOUSE #" and "STREET ADDRESS".  The
+        lists contains dictionaries that correspond to individual violations, and have
+        key names of DATE, OVER FLOW, NOT OUT, NOT AT CURB, and DETAILS.  These values
+        ultimately come from either a CSV file or the database.
 """
 from string import Template
 
