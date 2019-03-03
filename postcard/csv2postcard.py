@@ -56,7 +56,7 @@ if __name__ == '__main__':
     # Now let's cook those down to violators that exceed the given threshold
     viable_violations = {key:value for key, value in aggregated_violations.items() if len(value) > args.threshold}
 
-    print('Considering ', len(viable_violations), 'violations
+    print('Considering ', len(viable_violations), 'violations out of', len(aggregated_violations), 'violations using a threshold of', args.threshold)
 
     # Now blat out the LaTeX for waste management violation postcards
     with Path(args.out_file).open('w') as latex_postcards_file:
