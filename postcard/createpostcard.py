@@ -8,6 +8,9 @@ import csv
 from pathlib import Path
 from string import Template
 
+# This is maximum number of violations we can handle printing on a postcard before we run out of space
+MAX_VIOLATIONS_PRINTED = 5
+
 # This is the script return code if we cannot open the curbside violations CSV file
 NO_CSV_FILE_ERROR = 1
 
@@ -23,8 +26,10 @@ postcard_tex_preamble = """\\documentclass{article}
     bottom=0.50in]{geometry}
     
 \\usepackage{graphicx}
-\\usepackage{enumerate} % for compressed lists
+\\usepackage{enumitem} % for compressed lists
 \\usepackage{textpos} % for precise address block placement
+
+\\renewcommand{\\familydefault}{\\sfdefault} % default font sans serif
 
 \\begin{document}
 """
@@ -36,7 +41,7 @@ Dear City of Knoxville resident,\\\\[2em]
 
 We had the following problems collecting your trash:
  
-$violations \\\\[2em]
+$violations
 
 $details
 
@@ -101,9 +106,19 @@ def calculate_violations(violations):
     :param violations: is an OrderedDict for a violation record
     :return: A string summarizing violations, which could be empty.
     """
-    violation_summary = '\\begin{itemize}[noitemsep]\n'
+    violation_summary = ''
 
-    for violation in violations:
+    if len(violations) > MAX_VIOLATIONS_PRINTED:
+        # These won't all fit on the back of the postcard, so just print the last five, and summarize the total count.
+        reported_violations = violations[- MAX_VIOLATIONS_PRINTED:]
+        violation_summary += 'You had ' + str(len(violations)) + " violations in the period between " + violations[0]['DATE'] + \
+                            ' and ' + violations[-1]['DATE'] + ' and we show only the most recent five here.\n\n'
+    else:
+        reported_violations = violations
+
+    violation_summary += '\\begin{itemize}[noitemsep]\n\\footnotesize\n'
+
+    for violation in reported_violations:
 
         if violation['OVER FLOW'] != '':
             violation_summary +=  '\\item ' + violation['DATE'] + ' Your trash was overflowing making it difficult to pick-up. \n'
@@ -124,6 +139,12 @@ def handle_details(violations):
     :param violations: is an OrderedDict for a violation record
     :return: if there any details, then return them, else return an empty string.
     """
+    if [x for x in violations if x['DETAILS'] != ''] == []:
+        # no details, so bail
+        return ''
+
+    # TODO we need similar throttling for potentially huge number of details overwhelming the postcard
+
     details = '\\begin{itemize}[noitemsep]\n'
 
     # TODO Re-format this more intelligently to eliminate redundant "the driver wanted ..."
@@ -143,7 +164,6 @@ def process_violation(violations, out_file):
     :return: None
     """
     # First write out the violations side of the postcard
-
     violations_string = Template(violations_tex)
 
     # Get nicely formatted strings for the violations and any driver details to later embed in the postcard.
@@ -154,15 +174,16 @@ def process_violation(violations, out_file):
                                                             details=details)
     out_file.write(out_postcard_string)
 
-    # We need to escape hashes, else LaTeX will puke.
+    # Then write the address side of the postcard
     address_string = Template(address_tex)
 
-    # We arbitrarily get the street address from the first violation since all violations *should* have the same address
+    # We arbitrarily get the street address from the first violation, violations[0], since all violations
+    # *should* have the same address
     out_address_string = address_string.safe_substitute(address=violations[0]['HOUSE #'] + ' ' + violations[0]['STREET'])
 
+    # We need to escape hashes, else LaTeX will puke.
     out_address_string = out_address_string.replace('#','\#')
 
-    # Then write the address side of the postcard
 
     out_file.write(out_address_string)
 
