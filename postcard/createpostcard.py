@@ -103,15 +103,22 @@ def calculate_violations(violations):
     :param violations: is an OrderedDict for a violation record
     :return: A string summarizing violations
     """
+    def is_valid(x):
+        return x['OVER FLOW'] != '' or x['NOT OUT'] != '' or x['NOT AT CURB'] != ''
+
     violation_summary = ''
 
-    if len(violations) > MAX_VIOLATIONS_PRINTED:
+    # Let's filter out the bogus violations where all the violations are blank.
+    # TODO we may actually want to whine about such bogus violation records.  :P
+    valid_violations= [x for x in violations if is_valid(x)]
+
+    if len(valid_violations) > MAX_VIOLATIONS_PRINTED:
         # These won't all fit on the back of the postcard, so just print the last five, and summarize the total count.
-        reported_violations = violations[-MAX_VIOLATIONS_PRINTED:]
-        violation_summary += 'We had ' + str(len(violations)) + " problems collecting your trash in the period between " + violations[0]['DATE'] + \
-                            ' and ' + violations[-1]['DATE'] + ', and show only the most recent four here.\n\n'
+        reported_violations = valid_violations[-MAX_VIOLATIONS_PRINTED:]
+        violation_summary += 'We had ' + str(len(valid_violations)) + " problems collecting your trash in the period between " + valid_violations[0]['DATE'] + \
+                            ' and ' + valid_violations[-1]['DATE'] + ', and show only the most recent four here.\n\n'
     else:
-        reported_violations = violations
+        reported_violations = valid_violations
         violation_summary += 'We had the following problems collecting your trash:\n'
 
     violation_summary += '\\begin{itemize}[noitemsep]\n\\footnotesize\n'
