@@ -1,12 +1,29 @@
 #!/usr/bin/env python3
 """
-    Used to create LaTeX output for a postcard.  This prints two pages for a 3.5" x 5" postcard.
+    Used to create LaTeX output for a postcard.  This creates two pages for a 3.5" x 5" postcard for each violation.
+
+
+usage: createpostcard.py [-h] [--in-file IN_FILE] [--out-file OUT_FILE]
+                         [--threshold THRESHOLD]
+
+Generate a postcard LaTeX file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --in-file IN_FILE, -i IN_FILE
+                        CSV file of curbside violations
+  --out-file OUT_FILE, -o OUT_FILE
+                        Where to write the LaTeX
+  --threshold THRESHOLD, -t THRESHOLD
+                        Threshold for number of violations to merit a postcard
 """
 import sys
 import argparse
 import csv
 from pathlib import Path
 from string import Template
+
+# TODO Need to use better pythonic string formatting throughout.
 
 # This is maximum number of violations we can handle printing on a postcard before we run out of space
 MAX_VIOLATIONS_PRINTED = 4
@@ -108,6 +125,7 @@ def calculate_violations(violations):
     :return: A string summarizing violations
     """
     def is_valid(x):
+        """ return false if all three violation fields are blank """
         return x['OVER FLOW'] != '' or x['NOT OUT'] != '' or x['NOT AT CURB'] != ''
 
     violation_summary = ''
@@ -130,7 +148,7 @@ def calculate_violations(violations):
     for violation in reported_violations:
 
         if violation['OVER FLOW'] != '':
-            violation_summary +=  '\\item ' + violation['DATE'] + ' Your trash was overflowing making it difficult to pick-up. \n'
+            violation_summary += '\\item ' + violation['DATE'] + ' Your trash was overflowing making it difficult to pick-up. \n'
 
         if violation['NOT OUT'] != '':
             violation_summary += '\\item ' + violation['DATE'] + ' Your trash was not out.  \n'
@@ -246,6 +264,3 @@ if __name__ == '__main__':
             process_violation(viable_violation, latex_postcards_file)
 
         write_latex_end(latex_postcards_file)
-
-
-
