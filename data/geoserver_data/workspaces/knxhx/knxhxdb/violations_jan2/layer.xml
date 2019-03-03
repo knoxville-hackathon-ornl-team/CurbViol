@@ -1,0 +1,15 @@
+<layer>
+  <name>violations_jan2</name>
+  <id>LayerInfoImpl--283f821f:1693fb09125:-7fde</id>
+  <type>VECTOR</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--283f821f:1693fb09125:-8000</id>
+  </defaultStyle>
+  <resource class="featureType">
+    <id>FeatureTypeInfoImpl--283f821f:1693fb09125:-7fdf</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+</layer>
