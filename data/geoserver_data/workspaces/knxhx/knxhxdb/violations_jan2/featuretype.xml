@@ -1,0 +1,37 @@
+<featureType>
+  <id>FeatureTypeInfoImpl--283f821f:1693fb09125:-7fdf</id>
+  <name>violations_jan2</name>
+  <nativeName>violations_jan2</nativeName>
+  <namespace>
+    <id>NamespaceInfoImpl--283f821f:1693fb09125:-7fe2</id>
+  </namespace>
+  <title>violations_jan2</title>
+  <keywords>
+    <string>features</string>
+    <string>violations_jan2</string>
+  </keywords>
+  <srs>EPSG:3857</srs>
+  <nativeBoundingBox>
+    <minx>-84.0586776733398</minx>
+    <maxx>-83.8466720581055</maxx>
+    <miny>35.9098281860352</miny>
+    <maxy>36.0451049804688</maxy>
+  </nativeBoundingBox>
+  <latLonBoundingBox>
+    <minx>-84.0586776733398</minx>
+    <maxx>-83.8466720581055</maxx>
+    <miny>35.9098281860352</miny>
+    <maxy>36.0451049804688</maxy>
+    <crs>EPSG:4326</crs>
+  </latLonBoundingBox>
+  <projectionPolicy>FORCE_DECLARED</projectionPolicy>
+  <enabled>true</enabled>
+  <store class="dataStore">
+    <id>DataStoreInfoImpl--283f821f:1693fb09125:-7fe0</id>
+  </store>
+  <maxFeatures>0</maxFeatures>
+  <numDecimals>0</numDecimals>
+  <overridingServiceSRS>false</overridingServiceSRS>
+  <skipNumberMatched>false</skipNumberMatched>
+  <circularArcPresent>false</circularArcPresent>
+</featureType>
