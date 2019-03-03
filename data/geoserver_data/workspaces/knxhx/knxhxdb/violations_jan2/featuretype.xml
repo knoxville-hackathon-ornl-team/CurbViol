@@ -10,7 +10,7 @@
     <string>features</string>
     <string>violations_jan2</string>
   </keywords>
-  <srs>EPSG:404000</srs>
+  <srs>EPSG:3857</srs>
   <nativeBoundingBox>
     <minx>-84.0586776733398</minx>
     <maxx>-83.8466720581055</maxx>
