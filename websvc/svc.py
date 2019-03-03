@@ -3,6 +3,7 @@ from flask import Flask, request, send_from_directory
 
 import psycopg2
 import pprint
+import re
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -22,10 +23,17 @@ def root():
 def root_css():
     return send_from_directory('', 'style.css')
 
+addre = r"^\s*(\d+)\s+(\w+)"
+
 @app.route('/submit', methods=['POST'])
 def submit():
-    cur1.execute('INSERT INTO violations("DATE", "HOUSE #", "STREET") VALUES (CURRENT_DATE, %s, %s)', (request.args.get('address','unknown'),request.args.get('details')))
-    return "Updated"
+    m = re.search(addre, request.args.get('address', 'unknown'))
+    if m:
+        print(m.group(1), m.group(2))
+        cur1.execute('INSERT INTO violations("DATE", "HOUSE #", "STREET", "DETAILS") VALUES (CURRENT_DATE, %s, %s)', m.group(1), m.group(2), ", ".join(request.args.get("violations"), request.args.get('details')))
+        return "Updated"
+    else:
+        return "Malformed address"
 
 @app.route('/worst', methods=['GET'])
 def worst():
@@ -40,4 +48,9 @@ def geocode():
         if g.ok:
             cur2.execute("UPDATE violators SET (lat, lon, gcattemp) = (%s, %s, %s, true)", (g.y, g.x, g.postal))
     return "Geocode complete"
+
+@app.route('/stats', methods=['GET'])
+def stats():
+    cur1.execute('select \'OVER FLOW\' as type, count(*) from violations where "OVER FLOW" is not null UNION select \'NOT OUT\', count(*) from violations where "NOT OUT" is not null UNION select \'NOT AT CURB\', count(*) from violations where "NOT AT CURB" is not null UNION select \'Other\', count(*) from violations where "NOT OUT" is null and "NOT AT CURB" is null and "OVER FLOW" is null and "DETAILS" is not null')
+    return pp.pformat(cur1.fetchall())
 
