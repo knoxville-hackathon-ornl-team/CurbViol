@@ -38,8 +38,6 @@ postcard_tex_preamble = """\\documentclass{article}
 violations_tex = """
 \\begin{flushleft}
 Dear City of Knoxville resident,\\\\[2em]
-
-We had the following problems collecting your trash:
  
 $violations
 
@@ -110,11 +108,12 @@ def calculate_violations(violations):
 
     if len(violations) > MAX_VIOLATIONS_PRINTED:
         # These won't all fit on the back of the postcard, so just print the last five, and summarize the total count.
-        reported_violations = violations[- MAX_VIOLATIONS_PRINTED:]
-        violation_summary += 'You had ' + str(len(violations)) + " violations in the period between " + violations[0]['DATE'] + \
-                            ' and ' + violations[-1]['DATE'] + ' and we show only the most recent five here.\n\n'
+        reported_violations = violations[-(MAX_VIOLATIONS_PRINTED + 1):]
+        violation_summary += 'You had ' + str(len(violations)) + " problems collecting your trash in the period between " + violations[0]['DATE'] + \
+                            ' and ' + violations[-1]['DATE'] + ', and we show only the most recent five here.\n\n'
     else:
         reported_violations = violations
+        violation_summary += 'We had the following problems collecting your trash:\n'
 
     violation_summary += '\\begin{itemize}[noitemsep]\n\\footnotesize\n'
 
@@ -145,12 +144,13 @@ def handle_details(violations):
 
     # TODO we need similar throttling for potentially huge number of details overwhelming the postcard
 
-    details = '\\begin{itemize}[noitemsep]\n'
+    details = 'We have the following notes regarding removing your trash:\n'
+    details += '\\begin{itemize}[noitemsep]\n'
 
     # TODO Re-format this more intelligently to eliminate redundant "the driver wanted ..."
     for violation in violations:
         if violation['DETAILS'] != '':
-            details = '\\item ' + violation['DATE'] + ' The driver wanted to inform you of the following: ' + violation['DETAILS'] + ' \n'
+            details += '\\item ' + violation['DATE'] + ' ' + violation['DETAILS'] + ' \n'
 
     details += '\\end{itemize} \n'
 
