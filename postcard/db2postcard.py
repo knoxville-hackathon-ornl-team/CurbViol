@@ -6,6 +6,8 @@
 
 
 """
+from pathlib import Path
+import argparse
 import psycopg2
 from pprint import pprint
 
@@ -14,6 +16,15 @@ import cardlatex
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Generate a postcard LaTeX file')
+
+    parser.add_argument('--out-file', '-o', help='Where to write the LaTeX')
+    parser.add_argument('--threshold', '-t', type=int, default=3, help='Threshold for number of violations to merit a postcard')
+
+    args = parser.parse_args()
+
+
+
     conn = psycopg2.connect("postgresql://docker:docker@localhost:25432/gis")
     conn.set_session(autocommit=True)
 
@@ -23,7 +34,36 @@ if __name__ == '__main__':
 
     results = cursor.fetchall()
 
+    # Aggregate the violations into a single dictionary keyed by concatenating the house
+    # number and street name
+    aggregated_violations = {}
+
     for result in results:
-        pprint(result)
+        # pprint(result)
+        house_address = result[1] + result[2] # street number of street name as key
+
+        single_address = aggregated_violations.setdefault(house_address, [])
+
+        violation = {'DATE' : str(result[0]),
+                     'HOUSE #' : result[1],
+                     'STREET' : result[2],
+                     'OVER FLOW' : result[3],
+                     'NOT OUT' : result[4],
+                     'NOT AT CURB' : result[5],
+                     'DETAILS' : result[6]}
+
+    # Now let's cook those down to violators that exceed the given threshold
+    viable_violations = {key:value for key, value in aggregated_violations.items() if len(value) > args.threshold}
+
+    print('Considering ', len(viable_violations), 'violations out of', len(aggregated_violations), 'violations using a threshold of', args.threshold)
+
+    # Now blat out the LaTeX for waste management violation postcards
+    with Path(args.out_file).open('w') as latex_postcards_file:
+        cardlatex.write_latex_preamble(latex_postcards_file)
+
+        for viable_violation in viable_violations.values():
+            cardlatex.process_violation(viable_violation, latex_postcards_file)
+
+        cardlatex.write_latex_end(latex_postcards_file)
 
 
