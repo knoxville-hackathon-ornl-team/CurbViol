@@ -49,15 +49,16 @@
                   <div class="card mb-4 shadow-sm">
                     <div class="card-header">
                       <h4 class="my-0 font-weight-normal">Report a Violation</h4>
-                      <form>
+                      <form action="{{ http://127.0.0.1:5000/submit }}" method="POST">
                             <div class="form-group">
-                                    <label for="exampleAddress1">Address</label>
-                                    <input type="email" class="form-control" id="exampleAddress1" placeholder="Enter address">
+                                    <label for="address">Address</label>
+                                    <input type="email" class="form-control" id="address" placeholder="Enter address">
     
                                   </div>
                                   <div class="form-group">
-                                        <label for="exampleFormControlSelect1">Violation</label>
-                                        <select multiple class="form-control" id="exampleFormControlSelect1">
+                                        
+                                        <label for="violation">Violation</label>
+                                        <select multiple class="form-control" id="violation">
                                           <option>Overflow</option>
                                           <option>Not Out</option>
                                           <option>Not at Curb</option>
@@ -65,8 +66,8 @@
                                         </select>
                                       </div>
                                       <div class="form-group">
-                                            <label for="exampleAddress1">Details</label>
-                                            <input type="email" class="form-control" id="exampleAddress1" placeholder="Enter Details">
+                                            <label for="details">Details</label>
+                                            <input type="email" class="form-control" id="details" placeholder="Enter Details">
             
                                           </div>
                                   <button type="submit" class="btn btn-primary">Submit</button>
