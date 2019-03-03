@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-    Used to create LaTeX output for a postcard.  This creates two pages for a 3.5" x 5" postcard for each violation.
+    Used to create LaTeX output for a postcard from a CSV file.  This creates
+    two pages for a 3.5" x 5" postcard for each violation.
 
 
 usage: csv2postcard.py [-h] [--in-file IN_FILE] [--out-file OUT_FILE]
