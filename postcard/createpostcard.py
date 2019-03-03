@@ -50,7 +50,7 @@ postcard_tex_preamble = """\\documentclass[10pt]{article}
 \\usepackage{textpos} % for precise address block placement
 \\usepackage{needspace} % try to prevent unnecessary page breaks
 
-% Frantic effort to prevent the "Cordially" lines from occasionlly going to another page for no reason.
+% Frantic effort to prevent the "Cordially" lines from occasionally going to another page for no reason.
 \\needspace{10\\baselineskip}
 \\clubpenalty=10
 \\widowpenalties 1 10000
